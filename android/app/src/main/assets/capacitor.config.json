@@ -1,0 +1,9 @@
+{
+	"appId": "com.shramiclocal.app",
+	"appName": "Shramic Local",
+	"webDir": "www",
+	"server": {
+		"androidScheme": "https",
+		"cleartext": false
+	}
+}
