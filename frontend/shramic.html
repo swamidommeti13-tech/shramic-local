@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shramic Local | Local Jobs</title>
+    <link rel="stylesheet" href="../shramic.css">
+</head>
+<body>
+
+<aside class="sidebar">
+    <h2 class="logo">🛠️ Shramic Local</h2>
+    <p class="tagline">Local Work. Direct Hiring.</p>
+
+    <button class="nav-btn active" onclick="showPage('dashboard', this)">
+        🏠 Dashboard
+    </button>
+    <button class="nav-btn" onclick="showPage('jobs', this)">
+        💼 Find Jobs
+    </button>
+    <button class="nav-btn" onclick="showPage('applications', this)">
+        📋 Applications
+    </button>
+    <button class="nav-btn" onclick="showPage('payments', this)">
+        💰 Payments
+    </button>
+    <button class="nav-btn" onclick="showPage('profile', this)">
+        👤 My Profile
+    </button>
+
+    <div class="sidebar-bottom">
+        <p>Made for local workers</p>
+        <p>📍 Konaseema, AP</p>
+    </div>
+</aside>
+
+<main class="main-content">
+
+    <header class="topbar">
+        <div>
+            <h1 id="pageTitle">Dashboard</h1>
+            <p>Find work. Hire locally. Grow together.</p>
+        </div>
+
+        <div class="user-controls">
+            <select id="languageSelect" aria-label="Language"
+                    onchange="setShramicLanguage(this.value)">
+                <option value="en">English</option>
+                <option value="te">తెలుగు</option>
+            </select>
+            <select id="roleSelect" onchange="switchRole()" disabled>
+                <option value="worker">👷 Worker</option>
+                <option value="contractor">🏗️ Contractor</option>
+            </select>
+            <div class="avatar" id="avatar">S</div>
+        </div>
+    </header>
+
+    <section class="page" id="dashboard">
+
+        <div class="welcome-banner">
+            <div>
+                <p class="welcome-label" id="welcomeLabel">WELCOME TO SHRAMIC LOCAL</p>
+                <h2 id="welcomeTitle">Hello, Worker! 👋</h2>
+                <p id="welcomeText">
+                    Find nearby jobs and earn with your skills.
+                </p>
+            </div>
+            <div class="banner-icon">🤝</div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span>💼</span>
+                <p>Available Jobs</p>
+                <h2 id="availableCount">0</h2>
+            </div>
+            <div class="stat-card">
+                <span>📋</span>
+                <p>My Applications</p>
+                <h2 id="applicationCount">0</h2>
+            </div>
+            <div class="stat-card">
+                <span>💰</span>
+                <p id="earningsLabel">My Earnings</p>
+                <h2 id="earningsCount">₹0</h2>
+            </div>
+        </div>
+
+        <div class="section-heading">
+            <div>
+                <h2 id="featuredTitle">Recommended Jobs</h2>
+                <p>Explore opportunities in your area.</p>
+            </div>
+            <button class="primary-btn" id="postJobBtn"
+                    onclick="openJobModal()">+ Post a Job</button>
+        </div>
+
+        <div class="job-grid" id="featuredJobs"></div>
+
+    </section>
+
+    <section class="page hidden" id="jobs">
+        <div class="section-heading">
+            <div>
+                <h2 id="jobsHeading">Available Jobs</h2>
+                <p>Find the right work for your skills.</p>
+            </div>
+            <button class="primary-btn" id="jobsPostBtn"
+                    onclick="openJobModal()">+ Post a Job</button>
+        </div>
+
+        <div class="filter-bar">
+            <input type="search" id="searchInput"
+                   placeholder="Search jobs, skills or locations..."
+                   oninput="renderJobs()">
+
+            <select id="locationFilter" onchange="renderJobs()">
+                <option value="">All locations</option>
+                <option>Amalapuram</option>
+                <option>Mummidivaram</option>
+                <option>Razole</option>
+                <option>Rajamahendravaram</option>
+            </select>
+        </div>
+
+        <div class="job-grid" id="allJobs"></div>
+    </section>
+
+    <section class="page hidden" id="applications">
+        <div class="section-heading">
+            <div>
+                <h2 id="applicationsHeading">My Applications</h2>
+                <p>Track your job applications.</p>
+            </div>
+        </div>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Job</th>
+                        <th>Location</th>
+                        <th>Daily Wage</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="applicationsTable"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="page hidden" id="payments">
+        <div class="section-heading">
+            <div>
+                <h2>Payment Records</h2>
+                <p>Review your recorded job payments.</p>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span>💵</span>
+                <p>Total Recorded</p>
+                <h2 id="totalPayments">₹0</h2>
+            </div>
+            <div class="stat-card">
+                <span>✅</span>
+                <p>Paid Jobs</p>
+                <h2 id="paidJobs">0</h2>
+            </div>
+        </div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Job</th>
+                        <th>Contractor</th>
+                        <th>Amount</th>
+                        <th>Payment Status</th>
+                    </tr>
+                </thead>
+                <tbody id="paymentsTable"></tbody>
+            </table>
+        </div>
+
+        <p class="notice">
+        Payment records are stored for tracking only; no money is transferred.
+        </p>
+    </section>
+
+    <section class="page hidden" id="profile">
+        <div class="profile-card">
+            <div class="profile-avatar" id="profileAvatar">S</div>
+            <h2 id="profileName">Swami</h2>
+            <p id="profileRole">Worker</p>
+
+            <form id="profileForm">
+                <label for="nameInput">Full Name</label>
+                <input id="nameInput" required maxlength="60"
+                       placeholder="Enter your name">
+
+                <label for="locationInput">Village / Town</label>
+                <input id="locationInput" required maxlength="100"
+                       placeholder="e.g. Amalapuram">
+
+                <label for="skillInput">Skill / Work Type</label>
+                <input id="skillInput" maxlength="100"
+                       placeholder="e.g. Electrician">
+
+                <button class="primary-btn" type="submit">
+                    Save Profile
+                </button>
+            </form>
+        </div>
+    </section>
+
+</main>
+
+<div class="modal hidden" id="jobModal">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h2>Post a New Job</h2>
+            <button class="close-btn" onclick="closeJobModal()">✕</button>
+        </div>
+
+        <form id="jobForm">
+            <label for="jobTitle">Job Title</label>
+            <input id="jobTitle" required maxlength="100"
+                   placeholder="e.g. Construction Helper">
+
+            <label for="jobLocation">Location</label>
+            <input id="jobLocation" required maxlength="100"
+                   placeholder="e.g. Amalapuram">
+
+            <label for="jobWage">Daily Wage (₹)</label>
+            <input id="jobWage" type="number" required min="1"
+                   max="100000" placeholder="700">
+
+            <label for="jobWorkers">Workers Required</label>
+            <input id="jobWorkers" type="number" required min="1"
+                   max="1000" value="1">
+
+            <label for="jobDate">Work Date</label>
+            <input id="jobDate" type="date" required>
+
+            <label for="jobDescription">Work Description</label>
+            <textarea id="jobDescription" maxlength="500"
+                      placeholder="Describe the work..."></textarea>
+
+            <button class="primary-btn full-width" type="submit">
+                Publish Job
+            </button>
+        </form>
+    </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+    if (!localStorage.getItem('shramic_token')) {
+        window.location.href = 'login.html';
+    }
+</script>
+<script src="../i18n.js"></script>
+<script src="../shramic.js"></script>
+</body>
+</html>

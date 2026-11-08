@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shramic Local Login</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Nirmala UI", "Gautami", Arial, sans-serif;
+      background: linear-gradient(135deg, #0b0f12, #1d2b26);
+      color: white;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+    }
+    .auth-box {
+      width: min(420px, 90vw);
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 18px;
+      padding: 28px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+    }
+    h2 { margin: 0 0 20px; font-size: 28px; }
+    label { display: block; margin: 14px 0 8px; font-weight: 600; }
+    input, select {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.02);
+      color: white;
+    }
+    button {
+      width: 100%;
+      margin-top: 18px;
+      padding: 12px 16px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #f5d06b, #d8a93e);
+      color: #111;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .toggle {
+      text-align: center;
+      margin-top: 16px;
+      color: #d9d9d9;
+      font-size: 14px;
+    }
+    .toggle button {
+      width: auto;
+      background: transparent;
+      color: #f5d06b;
+      margin: 0 0 0 8px;
+      padding: 0;
+      font-weight: bold;
+    }
+    #message {
+      min-height: 20px;
+      margin-top: 12px;
+      color: #ffd89d;
+      font-size: 14px;
+    }
+    .server-config { display: none; }
+    .server-config p { color: #d9d9d9; font-size: 13px; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <div class="auth-box">
+    <label for="languageSelect">Language / భాష</label>
+    <select id="languageSelect" aria-label="Language"
+            onchange="setShramicLanguage(this.value)">
+      <option value="en">English</option>
+      <option value="te">తెలుగు</option>
+    </select>
+    <h2 id="formTitle">Login</h2>
+    <form id="authForm">
+      <div id="nameFieldWrap" style="display:none;">
+        <label for="nameInput">Full name</label>
+        <input id="nameInput" placeholder="Enter your full name" />
+      </div>
+
+      <label for="emailInput">Email</label>
+      <input id="emailInput" type="email" placeholder="you@example.com" required />
+
+      <label for="passwordInput">Password</label>
+      <input id="passwordInput" type="password" placeholder="Enter password" required />
+
+      <div id="roleFieldWrap" style="display:none;">
+        <label for="roleInput">Role</label>
+        <select id="roleInput">
+          <option value="worker">Worker</option>
+          <option value="contractor">Contractor</option>
+        </select>
+      </div>
+
+      <div id="serverConfig" class="server-config">
+        <label for="serverUrl">Backend server URL</label>
+        <input id="serverUrl" type="url" inputmode="url"
+               placeholder="https://your-server.example">
+        <p>Use the HTTPS address where Shramic Local's backend is hosted.</p>
+      </div>
+
+      <button type="submit" id="submitBtn">Login</button>
+    </form>
+
+    <div class="toggle">
+      <span id="toggleText">Need an account?</span>
+      <button type="button" id="toggleModeBtn">Register</button>
+    </div>
+
+    <div id="message"></div>
+  </div>
+
+  <script src="../i18n.js"></script>
+  <script>
+    const isNativeApp = Boolean(window.Capacitor?.isNativePlatform?.());
+    const serverUrlField = document.getElementById('serverUrl');
+    const savedApiUrl = localStorage.getItem('shramic_api_url');
+    serverUrlField.value = savedApiUrl || '';
+    document.getElementById('serverConfig').style.display = isNativeApp ? 'block' : 'none';
+    let apiUrl = savedApiUrl || (isNativeApp ? '' : window.location.origin);
+    let isLoginMode = true;
+
+    const authForm = document.getElementById('authForm');
+    const formTitle = document.getElementById('formTitle');
+    const submitBtn = document.getElementById('submitBtn');
+    const toggleModeBtn = document.getElementById('toggleModeBtn');
+    const toggleText = document.getElementById('toggleText');
+    const nameFieldWrap = document.getElementById('nameFieldWrap');
+    const roleFieldWrap = document.getElementById('roleFieldWrap');
+    const messageBox = document.getElementById('message');
+
+    function showMessage(msg, isError = false) {
+      messageBox.textContent = msg;
+      messageBox.style.color = isError ? '#ffb0b0' : '#ffd89d';
+    }
+
+    function setMode(loginMode) {
+      isLoginMode = loginMode;
+      formTitle.textContent = tr(loginMode ? 'Login' : 'Register');
+      submitBtn.textContent = tr(loginMode ? 'Login' : 'Register');
+      toggleText.textContent = tr(loginMode ? 'Need an account?' : 'Already have an account?');
+      toggleModeBtn.textContent = tr(loginMode ? 'Register' : 'Login');
+      nameFieldWrap.style.display = loginMode ? 'none' : 'block';
+      roleFieldWrap.style.display = loginMode ? 'none' : 'block';
+      showMessage('');
+    }
+
+    toggleModeBtn.addEventListener('click', () => setMode(!isLoginMode));
+
+    authForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      showMessage('');
+
+      if (isNativeApp) {
+        const enteredUrl = serverUrlField.value.trim();
+        if (!enteredUrl) {
+          showMessage(tr('Enter your secure server URL before signing in.'), true);
+          return;
+        }
+        try {
+          const parsedUrl = new URL(enteredUrl);
+          if (parsedUrl.protocol !== 'https:') {
+            showMessage(tr('For security, the backend URL must use HTTPS.'), true);
+            return;
+          }
+          apiUrl = parsedUrl.origin;
+          localStorage.setItem('shramic_api_url', apiUrl);
+        } catch (error) {
+          showMessage(tr('Enter a valid HTTPS backend URL.'), true);
+          return;
+        }
+      }
+
+      const payload = {
+        email: document.getElementById('emailInput').value.trim(),
+        password: document.getElementById('passwordInput').value
+      };
+
+      if (!payload.email || !payload.password) {
+        showMessage(tr('Please enter email and password.'), true);
+        return;
+      }
+
+      if (!isLoginMode) {
+        payload.name = document.getElementById('nameInput').value.trim();
+        payload.role = document.getElementById('roleInput').value;
+        if (!payload.name) {
+          showMessage(tr('Please enter your full name.'), true);
+          return;
+        }
+      }
+
+      const endpoint = isLoginMode ? `${apiUrl}/api/login` : `${apiUrl}/api/register`;
+
+      try {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || 'Request failed');
+        }
+
+        localStorage.setItem('shramic_token', data.token);
+        localStorage.setItem('shramic_user', JSON.stringify(data.user));
+        showMessage(tr('Login successful! Redirecting...'));
+        setTimeout(() => {
+          window.location.href = 'shramic.html';
+        }, 700);
+      } catch (error) {
+        showMessage(tr(error.message || 'Something went wrong.'), true);
+      }
+    });
+
+    window.onLanguageChanged = () => setMode(isLoginMode);
+    setMode(true);
+  </script>
+</body>
+</html>
